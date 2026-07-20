@@ -23,43 +23,62 @@ const chatList =
     document.getElementById("chatList");
 
 const robloxConnectButton =
-    document.getElementById("robloxConnectButton");
+    document.getElementById(
+        "robloxConnectButton"
+    );
 
 const robloxStatus =
-    document.getElementById("robloxStatus");
+    document.getElementById(
+        "robloxStatus"
+    );
 
 
-let chats = [];
+// =====================================
+// LOCAL ROBLOX BRIDGE
+// =====================================
 
-let currentChat = null;
+const BRIDGE_URL =
+    "http://127.0.0.1:8765";
 
 
-// ===============================
-// ENTER ANIME AI
-// ===============================
+// =====================================
+// ENTER APP
+// =====================================
 
 enterButton.addEventListener(
     "click",
     () => {
 
-        welcomeScreen.classList.add("hidden");
+        welcomeScreen.classList.add(
+            "hidden"
+        );
 
-        app.classList.remove("hidden");
+        app.classList.remove(
+            "hidden"
+        );
 
     }
 );
 
 
-// ===============================
+// =====================================
 // ADD MESSAGE
-// ===============================
+// =====================================
 
-function addMessage(text, type) {
+function addMessage(
+    text,
+    type
+) {
 
     const message =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
-    message.classList.add("message");
+
+    message.classList.add(
+        "message"
+    );
 
 
     if (type === "user") {
@@ -77,10 +96,13 @@ function addMessage(text, type) {
     }
 
 
-    message.textContent = text;
+    message.textContent =
+        text;
 
 
-    messages.appendChild(message);
+    messages.appendChild(
+        message
+    );
 
 
     messages.scrollTop =
@@ -89,39 +111,32 @@ function addMessage(text, type) {
 }
 
 
-// ===============================
-// SEND MESSAGE TO AI
-// ===============================
+// =====================================
+// SEND ROBLOX COMMAND
+// =====================================
 
-async function sendMessage() {
+async function sendRobloxActions(
+    actions
+) {
 
-    const message =
-        messageInput.value.trim();
+    if (
+        !actions ||
+        actions.length === 0
+    ) {
 
+        return false;
 
-    if (!message) return;
-
-
-    addMessage(
-        message,
-        "user"
-    );
-
-
-    messageInput.value = "";
-
-
-    addMessage(
-        "ANIME AI is thinking...",
-        "ai"
-    );
+    }
 
 
     try {
 
         const response =
             await fetch(
-                "/.netlify/functions/chat",
+
+                BRIDGE_URL +
+                "/send-command",
+
                 {
 
                     method: "POST",
@@ -135,11 +150,101 @@ async function sendMessage() {
 
                     body: JSON.stringify({
 
-                        message: message
+                        type: "actions",
+
+                        actions:
+                            actions
 
                     })
 
                 }
+
+            );
+
+
+        const data =
+            await response.json();
+
+
+        return data.success === true;
+
+
+    } catch (error) {
+
+        console.error(
+            "Bridge error:",
+            error
+        );
+
+
+        return false;
+
+    }
+
+}
+
+
+// =====================================
+// SEND MESSAGE
+// =====================================
+
+async function sendMessage() {
+
+    const message =
+        messageInput.value.trim();
+
+
+    if (!message) {
+
+        return;
+
+    }
+
+
+    addMessage(
+        message,
+        "user"
+    );
+
+
+    messageInput.value =
+        "";
+
+
+    addMessage(
+        "PORANGEAI is working...",
+        "ai"
+    );
+
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                "/.netlify/functions/chat",
+
+                {
+
+                    method: "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        message:
+                            message
+
+                    })
+
+                }
+
             );
 
 
@@ -154,19 +259,65 @@ async function sendMessage() {
         thinkingMessage.remove();
 
 
-        if (data.reply) {
+        // ============================
+        // SEND ACTIONS TO ROBLOX
+        // ============================
 
-            addMessage(
-                data.reply,
-                "ai"
-            );
+        if (
+
+            data.actions &&
+
+            data.actions.length > 0
+
+        ) {
+
+
+            const sent =
+                await sendRobloxActions(
+                    data.actions
+                );
+
+
+            if (sent) {
+
+
+                addMessage(
+
+                    "✅ " +
+                    (
+                        data.reply ||
+                        "Done! The changes were sent to Roblox Studio."
+                    ),
+
+                    "ai"
+
+                );
+
+
+            } else {
+
+
+                addMessage(
+
+                    "⚠️ AI created the actions, but Roblox Studio could not receive them. Make sure bridge.py and the plugin are running.",
+
+                    "ai"
+
+                );
+
+            }
+
 
         } else {
 
+
             addMessage(
-                "Error: " +
-                data.error,
+
+                data.reply ||
+                "The AI did not return any actions.",
+
                 "ai"
+
             );
 
         }
@@ -174,16 +325,31 @@ async function sendMessage() {
 
     } catch (error) {
 
+
         const thinkingMessage =
             messages.lastElementChild;
 
 
-        thinkingMessage.remove();
+        if (
+            thinkingMessage
+        ) {
+
+            thinkingMessage.remove();
+
+        }
 
 
         addMessage(
+
             "Could not connect to the AI server.",
+
             "ai"
+
+        );
+
+
+        console.error(
+            error
         );
 
     }
@@ -191,23 +357,28 @@ async function sendMessage() {
 }
 
 
-// ===============================
+// =====================================
 // SEND BUTTON
-// ===============================
+// =====================================
 
 sendButton.addEventListener(
+
     "click",
+
     sendMessage
+
 );
 
 
-// ===============================
+// =====================================
 // ENTER TO SEND
-// ===============================
+// =====================================
 
 messageInput.addEventListener(
+
     "keydown",
-    (event) => {
+
+    function(event) {
 
 
         if (
@@ -224,112 +395,22 @@ messageInput.addEventListener(
 
             sendMessage();
 
-
         }
 
-
     }
+
 );
 
 
-// ===============================
-// NEW CHAT
-// ===============================
-
-newChatButton.addEventListener(
-    "click",
-    () => {
-
-
-        const chat =
-            document.createElement("div");
-
-
-        chat.classList.add(
-            "chat-item"
-        );
-
-
-        chat.textContent =
-            "New Chat " +
-            (
-                chatList.children.length + 1
-            );
-
-
-        chatList.appendChild(
-            chat
-        );
-
-
-        chat.addEventListener(
-            "dblclick",
-            () => {
-
-
-                const newName =
-                    prompt(
-                        "Rename this chat:",
-                        chat.textContent
-                    );
-
-
-                if (newName) {
-
-                    chat.textContent =
-                        newName;
-
-                }
-
-
-            }
-        );
-
-
-        chat.addEventListener(
-            "click",
-            () => {
-
-
-                document
-                    .querySelectorAll(
-                        ".chat-item"
-                    )
-                    .forEach(
-                        item => {
-
-                            item.classList.remove(
-                                "active"
-                            );
-
-                        }
-                    );
-
-
-                chat.classList.add(
-                    "active"
-                );
-
-
-                messages.innerHTML =
-                    "";
-
-
-            }
-        );
-
-
-    }
-);
-
-
-// ===============================
-// CONNECT ROBLOX STUDIO
-// ===============================
+// =====================================
+// ROBLOX CONNECTION CHECK
+// =====================================
 
 robloxConnectButton.addEventListener(
+
     "click",
-    async () => {
+
+    async function() {
 
 
         robloxStatus.textContent =
@@ -341,7 +422,10 @@ robloxConnectButton.addEventListener(
 
             const response =
                 await fetch(
-                    "http://127.0.0.1:8765/status"
+
+                    BRIDGE_URL +
+                    "/status"
+
                 );
 
 
@@ -350,7 +434,9 @@ robloxConnectButton.addEventListener(
 
 
             if (
+
                 data.pluginConnected
+
             ) {
 
 
@@ -377,6 +463,81 @@ robloxConnectButton.addEventListener(
 
         }
 
+    }
+
+);
+
+
+// =====================================
+// NEW CHAT
+// =====================================
+
+newChatButton.addEventListener(
+
+    "click",
+
+    function() {
+
+
+        const chat =
+            document.createElement(
+                "div"
+            );
+
+
+        chat.classList.add(
+            "chat-item"
+        );
+
+
+        chat.textContent =
+            "New Chat " +
+            (
+                chatList.children.length + 1
+            );
+
+
+        chatList.appendChild(
+            chat
+        );
+
+
+        chat.addEventListener(
+
+            "click",
+
+            function() {
+
+
+                document
+                    .querySelectorAll(
+                        ".chat-item"
+                    )
+                    .forEach(
+
+                        item => {
+
+                            item.classList.remove(
+                                "active"
+                            );
+
+                        }
+
+                    );
+
+
+                chat.classList.add(
+                    "active"
+                );
+
+
+                messages.innerHTML =
+                    "";
+
+            }
+
+        );
 
     }
+
 );
