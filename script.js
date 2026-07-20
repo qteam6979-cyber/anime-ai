@@ -19,7 +19,6 @@ enterButton.addEventListener("click", () => {
 });
 
 function addMessage(text, type) {
-
     const message = document.createElement("div");
 
     message.classList.add("message");
@@ -38,7 +37,6 @@ function addMessage(text, type) {
 }
 
 async function sendMessage() {
-
     const message = messageInput.value.trim();
 
     if (!message) return;
@@ -50,20 +48,20 @@ async function sendMessage() {
     addMessage("ANIME AI is thinking...", "ai");
 
     try {
+        const response = await fetch(
+            "/.netlify/functions/chat",
+            {
+                method: "POST",
 
-        const response = await fetch("/chat", {
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                message: message
-            })
-
-        });
+                body: JSON.stringify({
+                    message: message
+                })
+            }
+        );
 
         const data = await response.json();
 
@@ -76,17 +74,20 @@ async function sendMessage() {
             addMessage(data.reply, "ai");
         } else {
             addMessage(
-                "Error: " + data.error,
+                "Error: " + (data.error || "Unknown error"),
                 "ai"
             );
         }
 
     } catch (error) {
+        console.error(error);
 
         const thinkingMessage =
             messages.lastElementChild;
 
-        thinkingMessage.remove();
+        if (thinkingMessage) {
+            thinkingMessage.remove();
+        }
 
         addMessage(
             "Could not connect to the AI server.",
@@ -103,24 +104,20 @@ sendButton.addEventListener(
 messageInput.addEventListener(
     "keydown",
     (event) => {
-
         if (
             event.key === "Enter" &&
             !event.shiftKey
         ) {
-
             event.preventDefault();
 
             sendMessage();
         }
-
     }
 );
 
 newChatButton.addEventListener(
     "click",
     () => {
-
         const chat = document.createElement("div");
 
         chat.classList.add("chat-item");
@@ -134,24 +131,20 @@ newChatButton.addEventListener(
         chat.addEventListener(
             "dblclick",
             () => {
-
-                const newName =
-                    prompt(
-                        "Rename this chat:",
-                        chat.textContent
-                    );
+                const newName = prompt(
+                    "Rename this chat:",
+                    chat.textContent
+                );
 
                 if (newName) {
                     chat.textContent = newName;
                 }
-
             }
         );
 
         chat.addEventListener(
             "click",
             () => {
-
                 document
                     .querySelectorAll(".chat-item")
                     .forEach(item => {
@@ -163,6 +156,5 @@ newChatButton.addEventListener(
                 messages.innerHTML = "";
             }
         );
-
     }
 );
