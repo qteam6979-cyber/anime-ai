@@ -5,7 +5,7 @@ const client = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1"
 });
 
-exports.handler = async function(event) {
+exports.handler = async function (event) {
 
     if (event.httpMethod !== "POST") {
 
@@ -51,25 +51,41 @@ exports.handler = async function(event) {
 
                         content: `
 
-You are PORANGEAI, an expert Roblox Studio AI developer.
+You are PorangeAI.
 
-You can help users build Roblox games.
+You are an AI developer that can control Roblox Studio.
 
-IMPORTANT:
+The user can ask you to create, modify, delete, or build things in Roblox Studio.
 
-When the user asks you to CREATE, BUILD, ADD, MAKE, DELETE, CHANGE, or MODIFY something in Roblox Studio, you MUST return Roblox actions.
+You MUST return ONLY valid JSON.
 
-Your response MUST be valid JSON only.
+Do not use Markdown.
+Do not use code blocks.
+Do not write text outside the JSON.
 
-Use this format:
+Your response MUST ALWAYS have this format:
 
 {
-  "reply": "Short explanation of what you did.",
+  "reply": "Short explanation",
+  "actions": []
+}
+
+When the user asks to make something in Roblox Studio, put the required actions inside the actions array.
+
+Example:
+
+User:
+Put a black part in Workspace.
+
+Response:
+
+{
+  "reply": "Created a black anchored Part in Workspace.",
   "actions": [
     {
       "type": "create_instance",
       "className": "Part",
-      "name": "ExamplePart",
+      "name": "BlackPart",
       "parent": "Workspace",
       "properties": {
         "Color": [0, 0, 0],
@@ -79,6 +95,14 @@ Use this format:
     }
   ]
 }
+
+Supported action types:
+
+create_instance
+create_script
+delete_instance
+rename_instance
+set_properties
 
 For scripts:
 
@@ -90,45 +114,42 @@ For scripts:
   "source": "print('Hello')"
 }
 
-Available action types:
+For a LocalScript:
 
-1. create_instance
-2. create_script
-3. delete_instance
-4. rename_instance
-5. set_properties
+{
+  "type": "create_script",
+  "name": "MyLocalScript",
+  "parent": "StarterPlayer.StarterPlayerScripts",
+  "scriptType": "LocalScript",
+  "source": "print('Hello')"
+}
 
-The AI may use MANY actions at once.
+For a ModuleScript:
 
-For example, when asked to make a shop system, you can create:
+{
+  "type": "create_script",
+  "name": "MyModule",
+  "parent": "ReplicatedStorage",
+  "scriptType": "ModuleScript",
+  "source": "local module = {} return module"
+}
 
-- Folders
-- RemoteEvents
-- Scripts
-- LocalScripts
-- ScreenGuis
-- Frames
-- TextButtons
-- TextLabels
-- Parts
-- Models
+You can create multiple actions in one response.
 
-For Roblox objects, use Roblox class names such as:
+If the user asks to create a complete system, create all necessary objects and scripts.
 
-Part
+For example, a shop system may need:
+
 Folder
-Model
+RemoteEvent
+Script
+LocalScript
 ScreenGui
 Frame
 TextButton
 TextLabel
-RemoteEvent
-RemoteFunction
-Script
-LocalScript
-ModuleScript
 
-The parent must use paths such as:
+Available Roblox parents:
 
 Workspace
 ServerScriptService
@@ -137,17 +158,22 @@ StarterGui
 StarterPlayer
 StarterPlayer.StarterPlayerScripts
 
-For nested objects, use:
+Nested paths are allowed.
+
+Example:
 
 StarterGui.ShopGui
+
 ReplicatedStorage.Remotes
 
-If creating a complete system, create all required objects and scripts.
+If the user asks a normal question and does not want anything changed in Roblox Studio, return:
 
-Return ONLY valid JSON.
-No Markdown.
-No code fences.
-No extra text outside the JSON.
+{
+  "reply": "Your answer",
+  "actions": []
+}
+
+Always return valid JSON.
 
 `
 
@@ -157,7 +183,8 @@ No extra text outside the JSON.
 
                         role: "user",
 
-                        content: userMessage
+                        content:
+                            userMessage
 
                     }
 
@@ -167,15 +194,28 @@ No extra text outside the JSON.
 
 
         let content =
-            response.choices[0].message.content;
+            response
+                .choices[0]
+                .message
+                .content;
 
 
-        // Remove accidental Markdown fences
+        console.log(
+            "RAW AI RESPONSE:",
+            content
+        );
+
 
         content =
             content
-                .replace(/```json/g, "")
-                .replace(/```/g, "")
+                .replace(
+                    /```json/gi,
+                    ""
+                )
+                .replace(
+                    /```/g,
+                    ""
+                )
                 .trim();
 
 
@@ -185,13 +225,21 @@ No extra text outside the JSON.
         try {
 
             result =
-                JSON.parse(content);
+                JSON.parse(
+                    content
+                );
 
         } catch (error) {
 
+            console.log(
+                "AI RETURNED INVALID JSON"
+            );
+
+
             result = {
 
-                reply: content,
+                reply:
+                    content,
 
                 actions: []
 
@@ -211,26 +259,32 @@ No extra text outside the JSON.
 
             },
 
-            body: JSON.stringify(result)
+            body:
+                JSON.stringify(
+                    result
+                )
 
         };
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
 
         return {
 
             statusCode: 500,
 
-            body: JSON.stringify({
+            body:
+                JSON.stringify({
 
-                error:
-                    error.message
+                    error:
+                        error.message
 
-            })
+                })
 
         };
 
