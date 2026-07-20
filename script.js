@@ -81,7 +81,9 @@ function addMessage(
     );
 
 
-    if (type === "user") {
+    if (
+        type === "user"
+    ) {
 
         message.classList.add(
             "user-message"
@@ -112,7 +114,7 @@ function addMessage(
 
 
 // =====================================
-// SEND ROBLOX COMMAND
+// SEND ACTIONS TO ROBLOX BRIDGE
 // =====================================
 
 async function sendRobloxActions(
@@ -120,7 +122,10 @@ async function sendRobloxActions(
 ) {
 
     if (
-        !actions ||
+        !Array.isArray(
+            actions
+        )
+        ||
         actions.length === 0
     ) {
 
@@ -131,6 +136,7 @@ async function sendRobloxActions(
 
     try {
 
+
         const response =
             await fetch(
 
@@ -139,7 +145,8 @@ async function sendRobloxActions(
 
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
@@ -148,28 +155,44 @@ async function sendRobloxActions(
 
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        type: "actions",
+                            type:
+                                "actions",
 
-                        actions:
-                            actions
+                            actions:
+                                actions
 
-                    })
+                        })
 
                 }
 
             );
 
 
+        if (
+            !response.ok
+        ) {
+
+            return false;
+
+        }
+
+
         const data =
             await response.json();
 
 
-        return data.success === true;
+        return (
+            data.success === true
+        );
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
+
 
         console.error(
             "Bridge error:",
@@ -185,16 +208,19 @@ async function sendRobloxActions(
 
 
 // =====================================
-// SEND MESSAGE
+// SEND MESSAGE TO AI
 // =====================================
 
 async function sendMessage() {
+
 
     const message =
         messageInput.value.trim();
 
 
-    if (!message) {
+    if (
+        !message
+    ) {
 
         return;
 
@@ -220,6 +246,10 @@ async function sendMessage() {
     try {
 
 
+        // ================================
+        // SEND MESSAGE TO NETLIFY AI
+        // ================================
+
         const response =
             await fetch(
 
@@ -227,7 +257,8 @@ async function sendMessage() {
 
                 {
 
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
@@ -236,12 +267,13 @@ async function sendMessage() {
 
                     },
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
 
-                        message:
-                            message
+                            message:
+                                message
 
-                    })
+                        })
 
                 }
 
@@ -252,41 +284,97 @@ async function sendMessage() {
             await response.json();
 
 
+        // Remove thinking message
+
         const thinkingMessage =
             messages.lastElementChild;
 
 
-        thinkingMessage.remove();
+        if (
+            thinkingMessage
+        ) {
+
+            thinkingMessage.remove();
+
+        }
 
 
-        // ============================
-        // SEND ACTIONS TO ROBLOX
-        // ============================
+        // ================================
+        // AI ERROR
+        // ================================
+
+        if (
+            data.error
+        ) {
+
+            addMessage(
+
+                "❌ AI Error: " +
+                data.error,
+
+                "ai"
+
+            );
+
+
+            return;
+
+        }
+
+
+        // ================================
+        // AI RETURNED ACTIONS
+        // ================================
 
         if (
 
-            data.actions &&
+            Array.isArray(
+                data.actions
+            )
+
+            &&
 
             data.actions.length > 0
 
         ) {
 
 
+            addMessage(
+
+                "⚙️ Sending " +
+                data.actions.length +
+                " action(s) to Roblox Studio...",
+
+                "ai"
+
+            );
+
+
             const sent =
                 await sendRobloxActions(
+
                     data.actions
+
                 );
 
 
-            if (sent) {
+            if (
+                sent
+            ) {
 
 
                 addMessage(
 
                     "✅ " +
+
                     (
-                        data.reply ||
+
+                        data.reply
+
+                        ||
+
                         "Done! The changes were sent to Roblox Studio."
+
                     ),
 
                     "ai"
@@ -299,7 +387,7 @@ async function sendMessage() {
 
                 addMessage(
 
-                    "⚠️ AI created the actions, but Roblox Studio could not receive them. Make sure bridge.py and the plugin are running.",
+                    "⚠️ The AI created the actions, but the Roblox bridge could not receive them. Make sure bridge.py is running and the Roblox plugin is connected.",
 
                     "ai"
 
@@ -308,12 +396,21 @@ async function sendMessage() {
             }
 
 
-        } else {
+        }
+
+        // ================================
+        // NO ACTIONS
+        // ================================
+
+        else {
 
 
             addMessage(
 
-                data.reply ||
+                data.reply
+
+                ||
+
                 "The AI did not return any actions.",
 
                 "ai"
@@ -323,7 +420,9 @@ async function sendMessage() {
         }
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
 
         const thinkingMessage =
@@ -341,7 +440,7 @@ async function sendMessage() {
 
         addMessage(
 
-            "Could not connect to the AI server.",
+            "❌ Could not connect to the AI server.",
 
             "ai"
 
@@ -349,6 +448,7 @@ async function sendMessage() {
 
 
         console.error(
+            "AI request error:",
             error
         );
 
@@ -378,12 +478,17 @@ messageInput.addEventListener(
 
     "keydown",
 
-    function(event) {
+    function(
+        event
+    ) {
 
 
         if (
 
-            event.key === "Enter" &&
+            event.key ===
+            "Enter"
+
+            &&
 
             !event.shiftKey
 
@@ -403,14 +508,15 @@ messageInput.addEventListener(
 
 
 // =====================================
-// ROBLOX CONNECTION CHECK
+// CHECK ROBLOX CONNECTION
 // =====================================
 
 robloxConnectButton.addEventListener(
 
     "click",
 
-    async function() {
+    async function()
+    {
 
 
         robloxStatus.textContent =
@@ -429,13 +535,25 @@ robloxConnectButton.addEventListener(
                 );
 
 
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    "Bridge unavailable"
+                );
+
+            }
+
+
             const data =
                 await response.json();
 
 
             if (
 
-                data.pluginConnected
+                data.pluginConnected ===
+                true
 
             ) {
 
@@ -454,7 +572,9 @@ robloxConnectButton.addEventListener(
             }
 
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
 
             robloxStatus.textContent =
@@ -469,6 +589,83 @@ robloxConnectButton.addEventListener(
 
 
 // =====================================
+// AUTOMATIC CONNECTION CHECK
+// =====================================
+
+setInterval(
+
+    async function()
+    {
+
+
+        try {
+
+
+            const response =
+                await fetch(
+
+                    BRIDGE_URL +
+                    "/status"
+
+                );
+
+
+            if (
+                !response.ok
+            ) {
+
+                throw new Error(
+                    "Bridge offline"
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            if (
+
+                data.pluginConnected ===
+                true
+
+            ) {
+
+
+                robloxStatus.textContent =
+                    "🟢 Roblox Studio Connected";
+
+
+            } else {
+
+
+                robloxStatus.textContent =
+                    "🔴 Roblox Studio Not Connected";
+
+
+            }
+
+
+        } catch (
+            error
+        ) {
+
+
+            robloxStatus.textContent =
+                "🔴 Bridge Not Running";
+
+
+        }
+
+    },
+
+    3000
+
+);
+
+
+// =====================================
 // NEW CHAT
 // =====================================
 
@@ -476,7 +673,8 @@ newChatButton.addEventListener(
 
     "click",
 
-    function() {
+    function()
+    {
 
 
         const chat =
@@ -493,7 +691,10 @@ newChatButton.addEventListener(
         chat.textContent =
             "New Chat " +
             (
-                chatList.children.length + 1
+
+                chatList.children.length
+                + 1
+
             );
 
 
@@ -506,13 +707,16 @@ newChatButton.addEventListener(
 
             "click",
 
-            function() {
+            function()
+            {
 
 
                 document
+
                     .querySelectorAll(
                         ".chat-item"
                     )
+
                     .forEach(
 
                         item => {
