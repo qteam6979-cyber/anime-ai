@@ -1,73 +1,41 @@
 const OpenAI = require("openai");
 
-const client = new OpenAI({
 
-    apiKey:
-        process.env.OPENROUTER_API_KEY,
+const client =
+    new OpenAI({
 
-    baseURL:
-        "https://openrouter.ai/api/v1"
+        apiKey:
+            process.env.OPENROUTER_API_KEY,
 
-});
+        baseURL:
+            "https://openrouter.ai/api/v1"
 
-
-exports.handler = async function(event) {
-
-
-    if (
-        event.httpMethod !== "POST"
-    ) {
+    });
 
 
-        return {
-
-            statusCode:
-                405,
-
-            body:
-                JSON.stringify({
-
-                    error:
-                        "Method not allowed"
-
-                })
-
-        };
-
-    }
-
-
-    try {
-
-
-        const body =
-            JSON.parse(
-
-                event.body ||
-                "{}"
-
-            );
-
-
-        const userMessage =
-            body.message;
+exports.handler =
+    async function(event) {
 
 
         if (
-            !userMessage
+
+            event.httpMethod !==
+            "POST"
+
         ) {
 
 
             return {
 
                 statusCode:
-                    400,
+                    405,
 
                 body:
+
                     JSON.stringify({
 
                         error:
-                            "No message provided"
+                            "Method not allowed"
 
                     })
 
@@ -76,55 +44,88 @@ exports.handler = async function(event) {
         }
 
 
-        const response =
-            await client.chat.completions.create({
+        try {
 
-                model:
-                    "deepseek/deepseek-chat-v3-0324:free",
 
-                messages: [
+            const body =
+                JSON.parse(
 
-                    {
+                    event.body ||
+                    "{}"
 
-                        role:
-                            "system",
+                );
 
-                        content: `
+
+            const userMessage =
+                body.message;
+
+
+            if (
+
+                !userMessage
+
+            ) {
+
+
+                return {
+
+                    statusCode:
+                        400,
+
+                    body:
+
+                        JSON.stringify({
+
+                            error:
+                                "No message provided"
+
+                        })
+
+                };
+
+            }
+
+
+            const response =
+                await client.chat.completions.create({
+
+                    model:
+                        "deepseek/deepseek-chat-v3-0324:free",
+
+                    messages: [
+
+                        {
+
+                            role:
+                                "system",
+
+                            content: `
 
 You are PorangeAI.
 
-You are an AI developer that can control Roblox Studio.
+You control Roblox Studio through actions.
 
-You MUST return ONLY valid JSON.
+Return ONLY valid JSON.
 
-NEVER return Markdown.
+No Markdown.
 
-NEVER use code blocks.
+No code blocks.
 
-NEVER write text outside JSON.
+No text outside JSON.
 
-Your response MUST ALWAYS have this exact format:
+Always use:
 
 {
   "reply": "Short explanation",
   "actions": []
 }
 
-IMPORTANT:
+When the user asks to create, build, add, put, make, delete, rename, modify, or change something in Roblox Studio, return the actions required.
 
-When the user asks you to create, build, add, put, make, delete, rename, modify, or change something in Roblox Studio, you MUST return the required actions.
-
-The actions will be sent directly to a Roblox Studio plugin.
-
-EXAMPLE:
-
-User:
-Put a black part in Workspace.
-
-Return:
+Example:
 
 {
-  "reply": "Created a black anchored Part in Workspace.",
+  "reply": "Created a black Part in Workspace.",
   "actions": [
     {
       "type": "create_instance",
@@ -140,16 +141,7 @@ Return:
   ]
 }
 
-For a Folder:
-
-{
-  "type": "create_instance",
-  "className": "Folder",
-  "name": "MyFolder",
-  "parent": "Workspace"
-}
-
-For a Script:
+For scripts:
 
 {
   "type": "create_script",
@@ -159,7 +151,7 @@ For a Script:
   "source": "print('Hello')"
 }
 
-For a LocalScript:
+For LocalScripts:
 
 {
   "type": "create_script",
@@ -169,7 +161,7 @@ For a LocalScript:
   "source": "print('Hello')"
 }
 
-For a ModuleScript:
+For ModuleScripts:
 
 {
   "type": "create_script",
@@ -179,7 +171,7 @@ For a ModuleScript:
   "source": "local module = {} return module"
 }
 
-Supported action types:
+Supported actions:
 
 create_instance
 create_script
@@ -187,7 +179,7 @@ delete_instance
 rename_instance
 set_properties
 
-Available Roblox locations:
+Valid parents:
 
 Workspace
 ServerScriptService
@@ -198,160 +190,177 @@ StarterPlayer.StarterPlayerScripts
 
 Nested paths are allowed.
 
-If the user asks for a complete system, create ALL necessary objects and scripts using multiple actions.
+If the user asks for a complete system, create all required objects and scripts using multiple actions.
 
-For example, a complete shop system may require:
-
-Folder
-RemoteEvent
-Script
-LocalScript
-ScreenGui
-Frame
-TextButton
-TextLabel
-
-Do not just explain how to build something.
-
-Actually return the actions needed to build it.
-
-If the user asks a normal question that does not require Roblox Studio changes, return:
+If the user asks a normal question that does not change Roblox Studio:
 
 {
   "reply": "Your answer",
   "actions": []
 }
 
-ALWAYS RETURN VALID JSON.
+Always return valid JSON.
 
 `
 
-                    },
+                        },
 
-                    {
+                        {
 
-                        role:
-                            "user",
+                            role:
+                                "user",
 
-                        content:
-                            userMessage
+                            content:
+                                userMessage
 
-                    }
+                        }
 
-                ]
+                    ]
 
-            });
-
-
-        let content =
-            response
-                .choices[0]
-                .message
-                .content;
+                });
 
 
-        console.log(
-            "RAW AI RESPONSE:"
-        );
+            let content =
+                response
+                    .choices[0]
+                    .message
+                    .content;
 
 
-        console.log(
-            content
-        );
+            console.log(
+                "RAW AI RESPONSE:"
+            );
 
 
-        content =
-            content
-                .trim();
+            console.log(
+                content
+            );
 
 
-        // Remove Markdown code blocks
-
-        content =
-            content
-                .replace(
-                    /```json/gi,
-                    ""
-                )
-                .replace(
-                    /```/g,
-                    ""
-                )
-                .trim();
+            content =
+                content.trim();
 
 
-        let result;
+            content =
+                content
+
+                    .replace(
+
+                        /```json/gi,
+
+                        ""
+
+                    )
+
+                    .replace(
+
+                        /```/g,
+
+                        ""
+
+                    )
+
+                    .trim();
 
 
-        // First, try to parse the whole response
-
-        try {
+            let result;
 
 
-            result =
-                JSON.parse(
-                    content
-                );
+            try {
 
 
-        } catch (
-            error
-        ) {
+                result =
+                    JSON.parse(
+                        content
+                    );
 
 
-            // If extra text exists, extract JSON
-
-            const firstBrace =
-                content.indexOf(
-                    "{"
-                );
+            }
 
 
-            const lastBrace =
-                content.lastIndexOf(
-                    "}"
-                );
+            catch (
 
-
-            if (
-
-                firstBrace !== -1
-
-                &&
-
-                lastBrace !== -1
+                error
 
             ) {
 
 
-                const jsonText =
-                    content.substring(
-
-                        firstBrace,
-
-                        lastBrace + 1
-
+                const firstBrace =
+                    content.indexOf(
+                        "{"
                     );
 
 
-                try {
+                const lastBrace =
+                    content.lastIndexOf(
+                        "}"
+                    );
 
 
-                    result =
-                        JSON.parse(
-                            jsonText
+                if (
+
+                    firstBrace !==
+                    -1
+
+                    &&
+
+                    lastBrace !==
+                    -1
+
+                ) {
+
+
+                    const extracted =
+                        content.substring(
+
+                            firstBrace,
+
+                            lastBrace + 1
+
                         );
 
 
-                } catch (
-                    jsonError
-                ) {
+                    try {
+
+
+                        result =
+                            JSON.parse(
+                                extracted
+                            );
+
+
+                    }
+
+
+                    catch (
+
+                        jsonError
+
+                    ) {
+
+
+                        result = {
+
+                            reply:
+                                "The AI returned invalid JSON.",
+
+                            actions:
+                                []
+
+                        };
+
+                    }
+
+                }
+
+
+                else {
 
 
                     result = {
 
                         reply:
-                            "The AI returned invalid JSON.",
+                            content,
 
                         actions:
                             []
@@ -360,125 +369,107 @@ ALWAYS RETURN VALID JSON.
 
                 }
 
+            }
 
-            } else {
 
+            if (
 
-                result = {
+                !Array.isArray(
+                    result.actions
+                )
 
-                    reply:
-                        content,
+            ) {
 
-                    actions:
-                        []
-
-                };
+                result.actions =
+                    [];
 
             }
 
-        }
+
+            if (
+
+                !result.reply
+
+            ) {
+
+                result.reply =
+                    "Command processed.";
+
+            }
 
 
-        // Always make sure actions is an array
-
-        if (
-
-            !Array.isArray(
-                result.actions
-            )
-
-        ) {
+            console.log(
+                "FINAL RESULT:"
+            );
 
 
-            result.actions =
-                [];
-
-        }
-
-
-        // Always make sure reply exists
-
-        if (
-
-            !result.reply
-
-        ) {
-
-
-            result.reply =
-                "Command processed.";
-
-        }
-
-
-        console.log(
-            "FINAL RESULT:"
-        );
-
-
-        console.log(
-
-            JSON.stringify(
-
-                result,
-
-                null,
-
-                2
-
-            )
-
-        );
-
-
-        return {
-
-            statusCode:
-                200,
-
-            headers: {
-
-                "Content-Type":
-                    "application/json"
-
-            },
-
-            body:
+            console.log(
 
                 JSON.stringify(
-                    result
+
+                    result,
+
+                    null,
+
+                    2
+
                 )
 
-        };
+            );
 
 
-    } catch (
-        error
-    ) {
+            return {
+
+                statusCode:
+                    200,
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json"
+
+                },
+
+                body:
+
+                    JSON.stringify(
+                        result
+                    )
+
+            };
 
 
-        console.error(
-            "CHAT FUNCTION ERROR:",
+        }
+
+
+        catch (
+
             error
-        );
+
+        ) {
 
 
-        return {
+            console.error(
+                error
+            );
 
-            statusCode:
-                500,
 
-            body:
+            return {
 
-                JSON.stringify({
+                statusCode:
+                    500,
 
-                    error:
-                        error.message
+                body:
 
-                })
+                    JSON.stringify({
 
-        };
+                        error:
+                            error.message
 
-    }
+                    })
 
-};
+            };
+
+        }
+
+    };
