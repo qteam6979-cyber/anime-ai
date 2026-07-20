@@ -1,102 +1,130 @@
 const OpenAI = require("openai");
 
 const client = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY,
-    baseURL: "https://openrouter.ai/api/v1"
+
+    apiKey:
+        process.env.OPENROUTER_API_KEY,
+
+    baseURL:
+        "https://openrouter.ai/api/v1"
+
 });
 
-exports.handler = async function (event) {
 
-    if (event.httpMethod !== "POST") {
+exports.handler = async function(event) {
+
+
+    if (
+        event.httpMethod !== "POST"
+    ) {
+
+
         return {
-            statusCode: 405,
-            body: JSON.stringify({
-                error: "Method not allowed"
-            })
+
+            statusCode:
+                405,
+
+            body:
+                JSON.stringify({
+
+                    error:
+                        "Method not allowed"
+
+                })
+
         };
+
     }
+
 
     try {
 
-        const body = JSON.parse(
-            event.body || "{}"
-        );
 
-        const userMessage = body.message;
+        const body =
+            JSON.parse(
 
-        if (!userMessage) {
+                event.body ||
+                "{}"
+
+            );
+
+
+        const userMessage =
+            body.message;
+
+
+        if (
+            !userMessage
+        ) {
+
+
             return {
-                statusCode: 400,
-                body: JSON.stringify({
-                    error: "No message provided"
-                })
+
+                statusCode:
+                    400,
+
+                body:
+                    JSON.stringify({
+
+                        error:
+                            "No message provided"
+
+                    })
+
             };
+
         }
+
 
         const response =
             await client.chat.completions.create({
 
-                // Use a specific model instead of
-                // openrouter/free
                 model:
                     "deepseek/deepseek-chat-v3-0324:free",
 
                 messages: [
 
                     {
-                        role: "system",
+
+                        role:
+                            "system",
 
                         content: `
+
 You are PorangeAI.
 
-You are a Roblox Studio AI developer.
-
-You can control Roblox Studio by returning actions.
-
-The user can ask you to:
-
-- Create Parts
-- Create folders
-- Create Models
-- Create GUIs
-- Create Scripts
-- Create LocalScripts
-- Create ModuleScripts
-- Create RemoteEvents
-- Create complete systems
-- Delete objects
-- Rename objects
-- Change properties
-- Build game systems
-
-IMPORTANT:
+You are an AI developer that can control Roblox Studio.
 
 You MUST return ONLY valid JSON.
 
-NEVER use Markdown.
+NEVER return Markdown.
 
 NEVER use code blocks.
 
-NEVER write anything outside the JSON.
+NEVER write text outside JSON.
 
-Your response MUST ALWAYS have this exact structure:
+Your response MUST ALWAYS have this exact format:
 
 {
   "reply": "Short explanation",
   "actions": []
 }
 
-If the user asks you to create or change something in Roblox Studio, the actions array MUST contain the actions needed to do it.
+IMPORTANT:
+
+When the user asks you to create, build, add, put, make, delete, rename, modify, or change something in Roblox Studio, you MUST return the required actions.
+
+The actions will be sent directly to a Roblox Studio plugin.
 
 EXAMPLE:
 
 User:
 Put a black part in Workspace.
 
-You MUST return:
+Return:
 
 {
-  "reply": "Created a black anchored black Part in Workspace.",
+  "reply": "Created a black anchored Part in Workspace.",
   "actions": [
     {
       "type": "create_instance",
@@ -112,32 +140,16 @@ You MUST return:
   ]
 }
 
-For multiple objects, return multiple actions.
-
-Example:
+For a Folder:
 
 {
-  "reply": "Created a folder and a part.",
-  "actions": [
-    {
-      "type": "create_instance",
-      "className": "Folder",
-      "name": "MyFolder",
-      "parent": "Workspace"
-    },
-    {
-      "type": "create_instance",
-      "className": "Part",
-      "name": "MyPart",
-      "parent": "Workspace",
-      "properties": {
-        "Anchored": true
-      }
-    }
-  ]
+  "type": "create_instance",
+  "className": "Folder",
+  "name": "MyFolder",
+  "parent": "Workspace"
 }
 
-For scripts use:
+For a Script:
 
 {
   "type": "create_script",
@@ -147,7 +159,7 @@ For scripts use:
   "source": "print('Hello')"
 }
 
-For LocalScripts use:
+For a LocalScript:
 
 {
   "type": "create_script",
@@ -157,7 +169,7 @@ For LocalScripts use:
   "source": "print('Hello')"
 }
 
-For ModuleScripts use:
+For a ModuleScript:
 
 {
   "type": "create_script",
@@ -186,49 +198,44 @@ StarterPlayer.StarterPlayerScripts
 
 Nested paths are allowed.
 
-Examples:
+If the user asks for a complete system, create ALL necessary objects and scripts using multiple actions.
 
-StarterGui.ShopGui
+For example, a complete shop system may require:
 
-ReplicatedStorage.Remotes
+Folder
+RemoteEvent
+Script
+LocalScript
+ScreenGui
+Frame
+TextButton
+TextLabel
 
-If the user asks for a complete system, create everything needed.
+Do not just explain how to build something.
 
-For example, a shop system can include:
+Actually return the actions needed to build it.
 
-- Folder
-- RemoteEvent
-- Script
-- LocalScript
-- ScreenGui
-- Frame
-- TextButton
-- TextLabel
-
-When the user asks to create something, DO NOT just explain how to do it.
-
-Actually return the actions needed to create it.
-
-For example, if the user says:
-
-"Make a shop UI"
-
-you must return actions that create the UI.
-
-If the user asks a normal question that does not require changing Roblox Studio, return:
+If the user asks a normal question that does not require Roblox Studio changes, return:
 
 {
   "reply": "Your answer",
   "actions": []
 }
 
-Always return valid JSON.
+ALWAYS RETURN VALID JSON.
+
 `
+
                     },
 
                     {
-                        role: "user",
-                        content: userMessage
+
+                        role:
+                            "user",
+
+                        content:
+                            userMessage
+
                     }
 
                 ]
@@ -237,19 +244,29 @@ Always return valid JSON.
 
 
         let content =
-            response.choices[0].message.content;
+            response
+                .choices[0]
+                .message
+                .content;
 
 
         console.log(
             "RAW AI RESPONSE:"
         );
 
+
         console.log(
             content
         );
 
 
-        // Remove Markdown code fences
+        content =
+            content
+                .trim();
+
+
+        // Remove Markdown code blocks
+
         content =
             content
                 .replace(
@@ -266,54 +283,130 @@ Always return valid JSON.
         let result;
 
 
+        // First, try to parse the whole response
+
         try {
 
+
             result =
-                JSON.parse(content);
+                JSON.parse(
+                    content
+                );
 
 
-            // Make sure actions always exists
+        } catch (
+            error
+        ) {
+
+
+            // If extra text exists, extract JSON
+
+            const firstBrace =
+                content.indexOf(
+                    "{"
+                );
+
+
+            const lastBrace =
+                content.lastIndexOf(
+                    "}"
+                );
+
+
             if (
-                !Array.isArray(
-                    result.actions
-                )
+
+                firstBrace !== -1
+
+                &&
+
+                lastBrace !== -1
+
             ) {
 
-                result.actions = [];
+
+                const jsonText =
+                    content.substring(
+
+                        firstBrace,
+
+                        lastBrace + 1
+
+                    );
+
+
+                try {
+
+
+                    result =
+                        JSON.parse(
+                            jsonText
+                        );
+
+
+                } catch (
+                    jsonError
+                ) {
+
+
+                    result = {
+
+                        reply:
+                            "The AI returned invalid JSON.",
+
+                        actions:
+                            []
+
+                    };
+
+                }
+
+
+            } else {
+
+
+                result = {
+
+                    reply:
+                        content,
+
+                    actions:
+                        []
+
+                };
 
             }
 
-
-            // Make sure reply exists
-            if (
-                !result.reply
-            ) {
-
-                result.reply =
-                    "Command processed.";
-
-            }
+        }
 
 
-        } catch (error) {
+        // Always make sure actions is an array
 
-            console.log(
-                "AI RETURNED INVALID JSON:"
-            );
+        if (
 
-            console.log(
-                content
-            );
+            !Array.isArray(
+                result.actions
+            )
+
+        ) {
 
 
-            result = {
+            result.actions =
+                [];
 
-                reply:
-                    "The AI returned an invalid command format.",
+        }
 
-                actions: []
 
-            };
+        // Always make sure reply exists
+
+        if (
+
+            !result.reply
+
+        ) {
+
+
+            result.reply =
+                "Command processed.";
 
         }
 
@@ -322,18 +415,26 @@ Always return valid JSON.
             "FINAL RESULT:"
         );
 
+
         console.log(
+
             JSON.stringify(
+
                 result,
+
                 null,
+
                 2
+
             )
+
         );
 
 
         return {
 
-            statusCode: 200,
+            statusCode:
+                200,
 
             headers: {
 
@@ -343,6 +444,7 @@ Always return valid JSON.
             },
 
             body:
+
                 JSON.stringify(
                     result
                 )
@@ -350,7 +452,10 @@ Always return valid JSON.
         };
 
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
+
 
         console.error(
             "CHAT FUNCTION ERROR:",
@@ -360,9 +465,11 @@ Always return valid JSON.
 
         return {
 
-            statusCode: 500,
+            statusCode:
+                500,
 
             body:
+
                 JSON.stringify({
 
                     error:
