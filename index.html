@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ANIME AI</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="welcomeScreen">
+
+        <div class="white-orb"></div>
+
+        <h1>WELCOME TO ANIME AI</h1>
+
+        <button id="enterButton">
+            ENTER ANIME AI
+        </button>
+
+    </div>
+
+    <div id="app" class="hidden">
+
+        <header>
+            <h2>ANIME AI</h2>
+
+            <button id="newChatButton">
+                + Add New Chat
+            </button>
+        </header>
+
+        <main>
+
+            <aside id="chatList">
+
+                <div class="chat-item active">
+                    New Chat
+                </div>
+
+            </aside>
+
+            <section class="chat-area">
+
+                <div id="messages"></div>
+
+                <div class="input-area">
+
+                    <textarea
+                        id="messageInput"
+                        placeholder="CHAT HERE!"
+                    ></textarea>
+
+                    <div class="input-buttons">
+
+                        <label class="upload-button">
+                            📷
+                            <input
+                                type="file"
+                                id="imageInput"
+                                accept="image/png,image/jpeg"
+                                hidden
+                            >
+                        </label>
+
+                        <button id="sendButton">
+                            SEND
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
