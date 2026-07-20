@@ -1,31 +1,56 @@
 const welcomeScreen =
-    document.getElementById("welcomeScreen");
+    document.getElementById(
+        "welcomeScreen"
+    );
+
 
 const app =
-    document.getElementById("app");
+    document.getElementById(
+        "app"
+    );
+
 
 const enterButton =
-    document.getElementById("enterButton");
+    document.getElementById(
+        "enterButton"
+    );
+
 
 const sendButton =
-    document.getElementById("sendButton");
+    document.getElementById(
+        "sendButton"
+    );
+
 
 const messageInput =
-    document.getElementById("messageInput");
+    document.getElementById(
+        "messageInput"
+    );
+
 
 const messages =
-    document.getElementById("messages");
+    document.getElementById(
+        "messages"
+    );
+
 
 const newChatButton =
-    document.getElementById("newChatButton");
+    document.getElementById(
+        "newChatButton"
+    );
+
 
 const chatList =
-    document.getElementById("chatList");
+    document.getElementById(
+        "chatList"
+    );
+
 
 const robloxConnectButton =
     document.getElementById(
         "robloxConnectButton"
     );
+
 
 const robloxStatus =
     document.getElementById(
@@ -33,21 +58,23 @@ const robloxStatus =
     );
 
 
-// =====================================
+// ==================================
 // LOCAL ROBLOX BRIDGE
-// =====================================
+// ==================================
 
 const BRIDGE_URL =
     "http://127.0.0.1:8765";
 
 
-// =====================================
-// ENTER APP
-// =====================================
+// ==================================
+// ENTER PORANGEAI
+// ==================================
 
 enterButton.addEventListener(
+
     "click",
-    () => {
+
+    function() {
 
         welcomeScreen.classList.add(
             "hidden"
@@ -58,17 +85,22 @@ enterButton.addEventListener(
         );
 
     }
+
 );
 
 
-// =====================================
+// ==================================
 // ADD MESSAGE
-// =====================================
+// ==================================
 
 function addMessage(
+
     text,
+
     type
+
 ) {
+
 
     const message =
         document.createElement(
@@ -82,14 +114,18 @@ function addMessage(
 
 
     if (
+
         type === "user"
+
     ) {
 
         message.classList.add(
             "user-message"
         );
 
-    } else {
+    }
+
+    else {
 
         message.classList.add(
             "ai-message"
@@ -113,20 +149,27 @@ function addMessage(
 }
 
 
-// =====================================
-// SEND ACTIONS TO ROBLOX BRIDGE
-// =====================================
+// ==================================
+// SEND ACTIONS TO BRIDGE
+// ==================================
 
 async function sendRobloxActions(
+
     actions
+
 ) {
 
+
     if (
+
         !Array.isArray(
             actions
         )
+
         ||
+
         actions.length === 0
+
     ) {
 
         return false;
@@ -156,6 +199,7 @@ async function sendRobloxActions(
                     },
 
                     body:
+
                         JSON.stringify({
 
                             type:
@@ -172,7 +216,9 @@ async function sendRobloxActions(
 
 
         if (
+
             !response.ok
+
         ) {
 
             return false;
@@ -185,17 +231,24 @@ async function sendRobloxActions(
 
 
         return (
-            data.success === true
+
+            data.success ===
+            true
+
         );
 
 
-    } catch (
+    }
+
+
+    catch (
+
         error
+
     ) {
 
 
         console.error(
-            "Bridge error:",
             error
         );
 
@@ -207,9 +260,9 @@ async function sendRobloxActions(
 }
 
 
-// =====================================
-// SEND MESSAGE TO AI
-// =====================================
+// ==================================
+// SEND MESSAGE TO PORANGEAI
+// ==================================
 
 async function sendMessage() {
 
@@ -219,7 +272,9 @@ async function sendMessage() {
 
 
     if (
+
         !message
+
     ) {
 
         return;
@@ -228,8 +283,11 @@ async function sendMessage() {
 
 
     addMessage(
+
         message,
+
         "user"
+
     );
 
 
@@ -238,17 +296,16 @@ async function sendMessage() {
 
 
     addMessage(
+
         "PORANGEAI is working...",
+
         "ai"
+
     );
 
 
     try {
 
-
-        // ================================
-        // SEND MESSAGE TO NETLIFY AI
-        // ================================
 
         const response =
             await fetch(
@@ -268,6 +325,7 @@ async function sendMessage() {
                     },
 
                     body:
+
                         JSON.stringify({
 
                             message:
@@ -284,14 +342,14 @@ async function sendMessage() {
             await response.json();
 
 
-        // Remove thinking message
-
         const thinkingMessage =
             messages.lastElementChild;
 
 
         if (
+
             thinkingMessage
+
         ) {
 
             thinkingMessage.remove();
@@ -299,13 +357,12 @@ async function sendMessage() {
         }
 
 
-        // ================================
-        // AI ERROR
-        // ================================
-
         if (
+
             data.error
+
         ) {
+
 
             addMessage(
 
@@ -322,10 +379,6 @@ async function sendMessage() {
         }
 
 
-        // ================================
-        // AI RETURNED ACTIONS
-        // ================================
-
         if (
 
             Array.isArray(
@@ -341,9 +394,7 @@ async function sendMessage() {
 
             addMessage(
 
-                "⚙️ Sending " +
-                data.actions.length +
-                " action(s) to Roblox Studio...",
+                "⚙️ Sending actions to Roblox Studio...",
 
                 "ai"
 
@@ -359,7 +410,9 @@ async function sendMessage() {
 
 
             if (
+
                 sent
+
             ) {
 
 
@@ -373,21 +426,9 @@ async function sendMessage() {
 
                         ||
 
-                        "Done! The changes were sent to Roblox Studio."
+                        "Done! Roblox Studio was updated."
 
                     ),
-
-                    "ai"
-
-                );
-
-
-            } else {
-
-
-                addMessage(
-
-                    "⚠️ The AI created the actions, but the Roblox bridge could not receive them. Make sure bridge.py is running and the Roblox plugin is connected.",
 
                     "ai"
 
@@ -396,11 +437,21 @@ async function sendMessage() {
             }
 
 
+            else {
+
+
+                addMessage(
+
+                    "⚠️ Actions were created, but Roblox Studio did not receive them. Check that bridge.py is running and the plugin is connected.",
+
+                    "ai"
+
+                );
+
+            }
+
         }
 
-        // ================================
-        // NO ACTIONS
-        // ================================
 
         else {
 
@@ -420,8 +471,13 @@ async function sendMessage() {
         }
 
 
-    } catch (
+    }
+
+
+    catch (
+
         error
+
     ) {
 
 
@@ -430,7 +486,9 @@ async function sendMessage() {
 
 
         if (
+
             thinkingMessage
+
         ) {
 
             thinkingMessage.remove();
@@ -448,7 +506,6 @@ async function sendMessage() {
 
 
         console.error(
-            "AI request error:",
             error
         );
 
@@ -457,9 +514,9 @@ async function sendMessage() {
 }
 
 
-// =====================================
+// ==================================
 // SEND BUTTON
-// =====================================
+// ==================================
 
 sendButton.addEventListener(
 
@@ -470,16 +527,18 @@ sendButton.addEventListener(
 );
 
 
-// =====================================
+// ==================================
 // ENTER TO SEND
-// =====================================
+// ==================================
 
 messageInput.addEventListener(
 
     "keydown",
 
     function(
+
         event
+
     ) {
 
 
@@ -507,174 +566,116 @@ messageInput.addEventListener(
 );
 
 
-// =====================================
+// ==================================
 // CHECK ROBLOX CONNECTION
-// =====================================
+// ==================================
+
+async function checkRobloxConnection() {
+
+
+    try {
+
+
+        const response =
+            await fetch(
+
+                BRIDGE_URL +
+                "/status"
+
+            );
+
+
+        if (
+
+            !response.ok
+
+        ) {
+
+            throw new Error(
+                "Bridge offline"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+
+            data.pluginConnected ===
+            true
+
+        ) {
+
+
+            robloxStatus.textContent =
+                "🟢 Roblox Studio Connected";
+
+        }
+
+
+        else {
+
+
+            robloxStatus.textContent =
+                "🔴 Roblox Studio Not Connected";
+
+        }
+
+
+    }
+
+
+    catch (
+
+        error
+
+    ) {
+
+
+        robloxStatus.textContent =
+            "🔴 Bridge Not Running";
+
+    }
+
+}
+
+
+// ==================================
+// CONNECTION BUTTON
+// ==================================
 
 robloxConnectButton.addEventListener(
 
     "click",
 
-    async function()
-    {
-
-
-        robloxStatus.textContent =
-            "🟡 Checking Roblox Studio...";
-
-
-        try {
-
-
-            const response =
-                await fetch(
-
-                    BRIDGE_URL +
-                    "/status"
-
-                );
-
-
-            if (
-                !response.ok
-            ) {
-
-                throw new Error(
-                    "Bridge unavailable"
-                );
-
-            }
-
-
-            const data =
-                await response.json();
-
-
-            if (
-
-                data.pluginConnected ===
-                true
-
-            ) {
-
-
-                robloxStatus.textContent =
-                    "🟢 Roblox Studio Connected";
-
-
-            } else {
-
-
-                robloxStatus.textContent =
-                    "🔴 Roblox Studio Not Connected";
-
-
-            }
-
-
-        } catch (
-            error
-        ) {
-
-
-            robloxStatus.textContent =
-                "🔴 Bridge Not Running";
-
-
-        }
-
-    }
+    checkRobloxConnection
 
 );
 
 
-// =====================================
-// AUTOMATIC CONNECTION CHECK
-// =====================================
+// Check every 3 seconds
 
 setInterval(
 
-    async function()
-    {
-
-
-        try {
-
-
-            const response =
-                await fetch(
-
-                    BRIDGE_URL +
-                    "/status"
-
-                );
-
-
-            if (
-                !response.ok
-            ) {
-
-                throw new Error(
-                    "Bridge offline"
-                );
-
-            }
-
-
-            const data =
-                await response.json();
-
-
-            if (
-
-                data.pluginConnected ===
-                true
-
-            ) {
-
-
-                robloxStatus.textContent =
-                    "🟢 Roblox Studio Connected";
-
-
-            } else {
-
-
-                robloxStatus.textContent =
-                    "🔴 Roblox Studio Not Connected";
-
-
-            }
-
-
-        } catch (
-            error
-        ) {
-
-
-            robloxStatus.textContent =
-                "🔴 Bridge Not Running";
-
-
-        }
-
-    },
+    checkRobloxConnection,
 
     3000
 
 );
 
 
-// =====================================
+// ==================================
 // NEW CHAT
-// =====================================
+// ==================================
 
 newChatButton.addEventListener(
 
     "click",
 
-    function()
-    {
+    function() {
 
 
         const chat =
@@ -690,6 +691,7 @@ newChatButton.addEventListener(
 
         chat.textContent =
             "New Chat " +
+
             (
 
                 chatList.children.length
@@ -707,8 +709,7 @@ newChatButton.addEventListener(
 
             "click",
 
-            function()
-            {
+            function() {
 
 
                 document
