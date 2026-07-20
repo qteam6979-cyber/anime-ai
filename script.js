@@ -309,8 +309,7 @@ async function sendMessage() {
 
         const response =
             await fetch(
-
-                "/.netlify/functions/chat",
+                "/chat",
 
                 {
 
